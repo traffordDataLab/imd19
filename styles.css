@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans');
+
+@font-face {
+  font-family: 'Open Sans', sans-serif;
+}
+
+div {
+  font-family: 'Open Sans', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .header {
+  font-family: 'Open Sans', sans-serif;
+}
+
+a {
+  color: #fc6721;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #fc6721;
+  text-decoration: underline;
+}
+
+a:focus {
+  color: #fc6721;
+  text-decoration: none;
+  outline: none;
+  outline-offset: 0;
+}
+
+.headerContainer a:hover {
+  text-decoration: none;
+}
+
+button:active {
+  box-shadow: none !important;
+}
+
+/* increase box padding */
+[class*="col-lg-"],[class*="col-md-"],
+[class*="col-sm-"],[class*="col-xs-"]{
+    padding-right:10px !important;
+    padding-left:10px !important;
+    padding-bottom:10px !important;
+}
+
+#intro {
+  margin-left: 30px;
+}
