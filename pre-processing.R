@@ -1,5 +1,7 @@
 # Indices of Multiple Deptivation 2019 #
 
+library(sf) ; library(tidyverse) ; library(snakecase)
+
 # Source: Ministry of Housing, Communities and Local Government
 # Publisher URL: https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019
 # Licence: Open Government Licence 3.0
@@ -36,7 +38,8 @@ imd15 <- filter(df, local_authority_district_name_2013 == "Trafford") %>%
          measure,
          value,
          index_domain) %>% 
-  spread(measure, value)
+  spread(measure, value) %>% 
+  mutate(year = "2015")
 
 write_csv(imd15, "data/imd15.csv")
 
@@ -47,8 +50,6 @@ write_csv(imd15, "data/imd15.csv")
 # Source: ONS Open Geography Portal 
 # Publisher URL: http://geoportal.statistics.gov.uk/
 # Licence: Open Government Licence 3.0
-
-library(sf) ; library(tidyverse) ; library(snakecase)
 
 lsoa <- st_read("https://ons-inspire.esriuk.com/arcgis/rest/services/Census_Boundaries/Lower_Super_Output_Areas_December_2011_Boundaries/MapServer/2/query?where=UPPER(lsoa11nm)%20like%20'%25TRAFFORD%25'&outFields=lsoa11cd,lsoa11nm&outSR=4326&f=geojson") %>% 
   st_as_sf(crs = 4326, coords = c("long", "lat")) 

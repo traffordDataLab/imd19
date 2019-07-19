@@ -21,7 +21,7 @@ ui <- fluidPage(
         href = "https://www.trafford.gov.uk",
         target = "_blank"
       ),
-      "Indices of Multiple Deprivation, 2019 (2015 data shown)"
+      "Indices of Multiple Deprivation, 2019"
     ),
     windowTitle = "imd19"
   ),
@@ -33,6 +33,10 @@ ui <- fluidPage(
     br(),
     div(class = "col-md-4",
         box(width = '100%', 
+            radioButtons(inputId = "year", label = NULL,
+                         choices = list("2019" = 2019, "2015" = 2015), 
+                         selected = 2015,
+                         inline = TRUE),
             radioButtons(inputId = "domain", label = NULL,
                          choices = c("Index of Multiple Deprivation", "Income", "Employment", "Education, Skills and Training", 
                                      "Health Deprivation and Disability", "Crime", "Barriers to Housing and Services", "Living Environment"),
@@ -46,10 +50,10 @@ ui <- fluidPage(
         box(width = '100%', 
             leafletOutput("map"),
             div(
-              style = "position: absolute; left: 1.5em; bottom: 2.5em;",
+              style = "position: absolute; left: 1.5em; bottom: 3.5em;",
               dropdown(
-                checkboxInput("checkbox", label = "Show localities", value = FALSE),
-                icon = icon("filter"),
+                checkboxInput("localities", label = "Add localities", value = FALSE),
+                icon = icon("cog"),
                 size = "xs",
                 style = "jelly",
                 width = "180px",
@@ -70,10 +74,15 @@ ui <- fluidPage(
 server <- function(input, output){
   
   domain <- reactive({
-    lsoa <- left_join(lsoa, filter(df, index_domain == input$domain), by = "lsoa11cd")
+    lsoa <- left_join(lsoa, filter(df, index_domain == input$domain), by = "lsoa11cd") %>% 
+      filter(year == input$year)
   })
   
   output$map <- renderLeaflet({
+    
+    validate(need(nrow(domain()) != 0, message = FALSE))
+    
+    bbox <- st_bbox(lsoa) %>% as.vector()
     
     labels <- 
       paste0(
@@ -84,18 +93,21 @@ server <- function(input, output){
       ) %>% 
       lapply(htmltools::HTML)    
     
-    pal <- colorFactor(c("#BD6C7D", "#DB8880", "#EDAA93", "#F7CFA6", "#FBECBF", "#EAF4BF", "#D0E6AD", "#ADD5A6", "#86BF99", "#73A289"), domain = 1:10, ordered = TRUE)
+    pal <- colorFactor(c("#453B52", "#454F69", "#3F657E", "#317B8D", "#239296", "#26A898", "#43BD93", "#6AD189", "#98E37D", "#CAF270"), domain = 1:10, ordered = TRUE)
     
     
-    if (input$checkbox) {
-    
+    if (input$localities) {
+  
+      
     leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
-      setMaxBounds(-2.478454, 53.357425,-2.253022, 53.480362) %>%
+      setMaxBounds(bbox[1], bbox[2], bbox[3], bbox[4]) %>%
       addTiles(
         urlTemplate = "",
         attribution = '<a href="https://www.ons.gov.uk/methodology/geography/licences">Contains OS data © Crown copyright and database right (2019)</a>',
         options = tileOptions(minZoom = 11, maxZoom = 17)
       ) %>%
+        addMapPane("lsoa", zIndex = 410) %>% 
+        addMapPane("localities", zIndex = 450) %>% 
       addPolygons(data = domain(), 
                   fillColor = ~pal(decile), 
                   weight = 1,  opacity = 1, color = "#FFF", dashArray = "1", fillOpacity = 1,
@@ -106,8 +118,11 @@ server <- function(input, output){
                   labelOptions = labelOptions(
                     style = list("font-weight" = "normal", padding = "3px 8px"),
                     textsize = "13px",
-                    direction = "auto")) %>%
-      addPolylines(data = localities, stroke = TRUE, weight = 3, color = "#212121", opacity = 1) %>% 
+                    direction = 'top',
+                    offset=c(0,-5)),
+                  options = pathOptions(pane = "lsoa")) %>%
+      addPolylines(data = localities, stroke = TRUE, weight = 2, color = "#000", opacity = 1,
+                   options = pathOptions(pane = "localities")) %>% 
       onRender(
         " function(el, t) {
         var myMap = this;
@@ -118,7 +133,7 @@ server <- function(input, output){
     else {
       
       leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
-        setMaxBounds(-2.478454, 53.357425,-2.253022, 53.480362) %>%
+        setMaxBounds(bbox[1], bbox[2], bbox[3], bbox[4]) %>%
         addTiles(
           urlTemplate = "",
           attribution = '<a href="https://www.ons.gov.uk/methodology/geography/licences">Contains OS data © Crown copyright and database right (2019)</a>',
@@ -134,7 +149,8 @@ server <- function(input, output){
                     labelOptions = labelOptions(
                       style = list("font-weight" = "normal", padding = "3px 8px"),
                       textsize = "13px",
-                      direction = "auto")) %>%
+                      direction = 'top',
+                      offset=c(0,-5))) %>%
        onRender(
           " function(el, t) {
         var myMap = this;
@@ -147,9 +163,11 @@ server <- function(input, output){
   
   output$bar <- renderggiraph({
     
-    palette <- c("#BD6C7D", "#DB8880", "#EDAA93", "#F7CFA6", "#FBECBF", "#EAF4BF", "#D0E6AD", "#ADD5A6", "#86BF99", "#73A289")
+    validate(need(nrow(domain()) != 0, message = FALSE))
     
-    gg <-domain() %>%
+    palette <- c("#453B52", "#454F69", "#3F657E", "#317B8D", "#239296", "#26A898", "#43BD93", "#6AD189", "#98E37D", "#CAF270")
+    
+    gg <- domain() %>%
       st_set_geometry(value = NULL) %>% 
       count(decile) %>%
       mutate(pct = n/sum(n),
@@ -167,8 +185,8 @@ server <- function(input, output){
       theme(
         panel.grid.major.y = element_blank(),
         panel.grid.minor = element_blank(),
-        plot.title = element_text(size = 14, vjust = 2, hjust = 0),
-        plot.subtitle = element_text(size = 11, hjust = 0),
+        plot.title = element_text(size = 12, vjust = 2, hjust = 0),
+        plot.subtitle = element_text(size = 10, hjust = 0),
         plot.caption = element_text(size = 9, colour = "#757575", hjust = 1, margin = margin(t = 15)),
         axis.text.y = element_text(face = "bold"),
         axis.text.x = element_blank(),
