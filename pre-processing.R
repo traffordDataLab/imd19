@@ -1,12 +1,10 @@
-# Indices of Multiple Deptivation 2019 #
+# Indices of Multiple Deprivation 2019 #
 
-library(sf) ; library(tidyverse) ; library(snakecase)
+library(sf) ; library(tidyverse) ; library(janitor)
 
 # Source: Ministry of Housing, Communities and Local Government
 # Publisher URL: https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019
 # Licence: Open Government Licence 3.0
-
-
 
 
 # ------------------------------------------
@@ -17,23 +15,25 @@ library(sf) ; library(tidyverse) ; library(snakecase)
 # Publisher URL: https://www.gov.uk/government/statistics/english-indices-of-deprivation-2015
 # Licence: Open Government Licence 3.0
 
-df <- read.csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/467774/File_7_ID_2015_All_ranks__deciles_and_scores_for_the_Indices_of_Deprivation__and_population_denominators.csv")
-names(df) <- to_snake_case(names(df))
+df <- read.csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/467774/File_7_ID_2015_All_ranks__deciles_and_scores_for_the_Indices_of_Deprivation__and_population_denominators.csv") %>% 
+  clean_names()
 
 imd15 <- filter(df, local_authority_district_name_2013 == "Trafford") %>% 
-  select(lsoa11cd = 1, 5:28) %>% 
+  select(lsoa11cd = 1, 5:34) %>% 
   gather(variable, value, -lsoa11cd) %>% 
   mutate(measure = case_when(str_detect(variable, "score") ~ "score", 
                              str_detect(variable, "decile") ~ "decile", 
                              str_detect(variable, "rank") ~ "rank"),
          index_domain = case_when(str_detect(variable, "index_of_multiple_deprivation") ~ "Index of Multiple Deprivation", 
-                                  str_detect(variable, "income") ~ "Income", 
                                   str_detect(variable, "employment") ~ "Employment",
                                   str_detect(variable, "education") ~ "Education, Skills and Training",
                                   str_detect(variable, "health") ~ "Health Deprivation and Disability",
                                   str_detect(variable, "crime") ~ "Crime",
                                   str_detect(variable, "barriers") ~ "Barriers to Housing and Services",
-                                  str_detect(variable, "living") ~ "Living Environment")) %>% 
+                                  str_detect(variable, "living") ~ "Living Environment",
+                                  str_detect(variable, "idaci") ~ "Income Deprivation Affecting Children",
+                                  str_detect(variable, "idaopi") ~ "Income Deprivation Affecting Older People",
+                                  TRUE ~ "Income")) %>% 
   select(lsoa11cd,
          measure,
          value,

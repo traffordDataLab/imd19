@@ -1,6 +1,6 @@
 library(shiny) ; library(shinydashboard) ; library(shinyWidgets) ; library(tidyverse) ; library(sf) ; library(leaflet) ; library(htmltools) ; library(htmlwidgets) ; library(ggiraph) ; library(scales)
 
-df <- read.csv("data/IMD15.csv") %>% 
+df <- read.csv("data/imd15.csv") %>% 
   mutate(decile = factor(decile))
 
 lsoa <- st_read("data/best_fit_lsoa.geojson")
@@ -39,7 +39,8 @@ ui <- fluidPage(
                          inline = TRUE),
             radioButtons(inputId = "domain", label = NULL,
                          choices = c("Index of Multiple Deprivation", "Income", "Employment", "Education, Skills and Training", 
-                                     "Health Deprivation and Disability", "Crime", "Barriers to Housing and Services", "Living Environment"),
+                                     "Health Deprivation and Disability", "Crime", "Barriers to Housing and Services", "Living Environment",
+                                     "Income Deprivation Affecting Children", "Income Deprivation Affecting Older People"),
                          selected = "Index of Multiple Deprivation"))
     ),
     div(class = "col-md-4",
