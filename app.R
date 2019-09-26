@@ -1,7 +1,8 @@
 library(shiny) ; library(shinydashboard) ; library(shinyWidgets) ; library(tidyverse) ; library(sf) ; library(leaflet) ; library(htmltools) ; library(htmlwidgets) ; library(ggiraph) ; library(scales)
 
-df <- read.csv("data/imd15.csv") %>% 
-  mutate(decile = factor(decile))
+df <- read.csv("data/imd.csv") %>% 
+  mutate(decile = factor(decile),
+         rank = as.integer(rank))
 
 lsoa <- st_read("data/best_fit_lsoa.geojson")
 
@@ -21,7 +22,7 @@ ui <- fluidPage(
         href = "https://www.trafford.gov.uk",
         target = "_blank"
       ),
-      "Indices of Multiple Deprivation, 2019"
+      "Indices of Deprivation, 2019"
     ),
     windowTitle = "imd19"
   ),
@@ -35,7 +36,7 @@ ui <- fluidPage(
         box(width = '100%', 
             radioButtons(inputId = "year", label = NULL,
                          choices = list("2019" = 2019, "2015" = 2015), 
-                         selected = 2015,
+                         selected = 2019,
                          inline = TRUE),
             radioButtons(inputId = "domain", label = NULL,
                          choices = c("Index of Multiple Deprivation", "Income", "Employment", "Education, Skills and Training", 
@@ -71,7 +72,6 @@ ui <- fluidPage(
 )
   
 
-  
 server <- function(input, output){
   
   domain <- reactive({
@@ -181,15 +181,15 @@ server <- function(input, output){
       labs(x = NULL, y = NULL,
            title = "% of LSOAs in Trafford by IMD decile",
            subtitle = "1 = most deprived, 10 = least deprived",
-           caption = "Source: MHCLG | @traffordDataLab") +
+           caption = "Source: MHCLG") +
       theme_minimal(base_size = 12, base_family = "Open Sans") %+replace% 
       theme(
         panel.grid.major.y = element_blank(),
         panel.grid.minor = element_blank(),
-        plot.title = element_text(size = 12, vjust = 2, hjust = 0),
-        plot.subtitle = element_text(size = 10, hjust = 0),
+        plot.title = element_text(size = 16, face = "bold", hjust = 0),
+        plot.subtitle = element_text(hjust = 0, margin = margin(9, 0, 9, 0)),
         plot.caption = element_text(size = 9, colour = "#757575", hjust = 1, margin = margin(t = 15)),
-        axis.text.y = element_text(face = "bold"),
+        axis.text.y = element_text(size = 12, face = "bold"),
         axis.text.x = element_blank(),
         legend.position = "none"
     )
