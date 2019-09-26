@@ -9,7 +9,7 @@ la <- "Trafford"
 # Publisher URL: https://www.gov.uk/government/statistics/announcements/english-indices-of-deprivation-2019
 # Licence: Open Government Licence 3.0
 
-df19 <- read.csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/833982/File_7_-_All_IoD2019_Scores__Ranks__Deciles_and_Population_Denominators.csv") %>% 
+df19 <- read_csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/833982/File_7_-_All_IoD2019_Scores__Ranks__Deciles_and_Population_Denominators.csv") %>% 
   clean_names()
 
 imd19 <- filter(df19, local_authority_district_name_2019 == la) %>% 
@@ -48,7 +48,7 @@ imd19 <- filter(df19, local_authority_district_name_2019 == la) %>%
 # Publisher URL: https://www.gov.uk/government/statistics/english-indices-of-deprivation-2015
 # Licence: Open Government Licence 3.0
 
-df15 <- read.csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/467774/File_7_ID_2015_All_ranks__deciles_and_scores_for_the_Indices_of_Deprivation__and_population_denominators.csv") %>% 
+df15 <- read_csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/467774/File_7_ID_2015_All_ranks__deciles_and_scores_for_the_Indices_of_Deprivation__and_population_denominators.csv") %>% 
   clean_names()
 
 imd15 <- filter(df15, local_authority_district_name_2013 == la) %>% 
@@ -79,7 +79,7 @@ imd15 <- filter(df15, local_authority_district_name_2013 == la) %>%
 
 # write_csv(imd15, "imd15.csv")
 
-bind_rows(imd19, imd15) %>% 
+bind_rows(imd19, imd15) %>%
   write_csv("imd.csv")
 
 # ------------------------------------------
