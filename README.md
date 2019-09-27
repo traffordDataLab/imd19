@@ -6,7 +6,7 @@ Interactive map showing the [Indices of Deprivation 2019](https://www.gov.uk/gov
   <img src="screenshot.png" width="800">
 </kbd>
 
-<br />
+<br /><br />
 
 The app can be viewed at <a href="https://trafforddatalab.shinyapps.io/imd19" target="_blank">https://trafforddatalab.shinyapps.io/imd19</a>. To run the app locally execute the following code:
 
