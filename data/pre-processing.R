@@ -1,18 +1,13 @@
-# Indices of Multiple Deprivation 2019 #
+# English Indices of Deprivation #
 
 library(sf) ; library(tidyverse) ; library(janitor)
-
-# Create a string object with the name of your local authority
-la <- "Trafford"
 
 # Source: Ministry of Housing, Communities and Local Government
 # Publisher URL: https://www.gov.uk/government/statistics/announcements/english-indices-of-deprivation-2019
 # Licence: Open Government Licence 3.0
 
-df19 <- read_csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/833982/File_7_-_All_IoD2019_Scores__Ranks__Deciles_and_Population_Denominators.csv") %>% 
-  clean_names()
-
-imd19 <- filter(df19, local_authority_district_name_2019 == la) %>% 
+imd19 <- read_csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/833982/File_7_-_All_IoD2019_Scores__Ranks__Deciles_and_Population_Denominators.csv") %>% 
+  clean_names() %>% 
   select(lsoa11cd = 1, 5:34) %>% 
   gather(variable, value, -lsoa11cd) %>% 
   mutate(measure = case_when(str_detect(variable, "score") ~ "score", 
@@ -33,25 +28,18 @@ imd19 <- filter(df19, local_authority_district_name_2019 == la) %>%
          value,
          index_domain) %>% 
   spread(measure, value) %>% 
-  mutate(year = "2019",
-         decile = as.character(decile),
-         rank = as.character(rank),
-         score = as.character(score))
-
-# write_csv(imd19, "imd19.csv")
+  mutate(year = "2019")
 
 # ------------------------------------------
 
-# Indices of Multiple Deprivation 2015 #
+# English Indices of Deprivation 2015 #
 
 # Source: Ministry of Housing, Communities and Local Government
 # Publisher URL: https://www.gov.uk/government/statistics/english-indices-of-deprivation-2015
 # Licence: Open Government Licence 3.0
 
-df15 <- read_csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/467774/File_7_ID_2015_All_ranks__deciles_and_scores_for_the_Indices_of_Deprivation__and_population_denominators.csv") %>% 
-  clean_names()
-
-imd15 <- filter(df15, local_authority_district_name_2013 == la) %>% 
+imd15 <- read_csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/467774/File_7_ID_2015_All_ranks__deciles_and_scores_for_the_Indices_of_Deprivation__and_population_denominators.csv") %>% 
+  clean_names() %>% 
   select(lsoa11cd = 1, 5:34) %>% 
   gather(variable, value, -lsoa11cd) %>% 
   mutate(measure = case_when(str_detect(variable, "score") ~ "score", 
@@ -72,12 +60,7 @@ imd15 <- filter(df15, local_authority_district_name_2013 == la) %>%
          value,
          index_domain) %>% 
   spread(measure, value) %>% 
-  mutate(year = "2015",
-         decile = as.character(decile),
-         rank = as.character(rank),
-         score = as.character(score))
-
-# write_csv(imd15, "imd15.csv")
+  mutate(year = "2015")
 
 bind_rows(imd19, imd15) %>%
   write_csv("imd.csv")
@@ -91,14 +74,24 @@ bind_rows(imd19, imd15) %>%
 # Licence: Open Government Licence 3.0
 
 # Lower-layer Super Output Area boundaries #
-lsoa <- st_read(paste0("https://ons-inspire.esriuk.com/arcgis/rest/services/Census_Boundaries/Lower_Super_Output_Areas_December_2011_Boundaries/MapServer/2/query?where=UPPER(lsoa11nm)%20like%20'%25", URLencode(toupper(la), reserved = TRUE), "%25'&outFields=lsoa11cd,lsoa11nm&outSR=4326&f=geojson")) %>% 
-  st_as_sf(crs = 4326, coords = c("long", "lat")) 
+lsoa <- st_read("https://opendata.arcgis.com/datasets/da831f80764346889837c72508f046fa_3.geojson") %>% 
+  select(lsoa11cd) %>% 
+  filter(str_detect(lsoa11cd, "^E")) %>%
+  st_as_sf(crs = 4326, coords = c("long", "lat"))
 
 # Best-fit lookup between LSOAs and wards
-best_fit_lookup <- st_read(paste0("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA11_WD18_LAD18_EW_LUv3/FeatureServer/0/query?where=UPPER(lad18nm)%20like%20'%25", URLencode(toupper(la), reserved = TRUE), "%25'&outFields=LSOA11CD,WD18CD,WD18NM,LAD18CD,LAD18NM&outSR=4326&f=geojson")) %>% 
+best_fit_lookup <- read_csv("https://opendata.arcgis.com/datasets/8c05b84af48f4d25a2be35f1d984b883_0.csv") %>% 
   setNames(tolower(names(.)))  %>%
-  st_set_geometry(NULL)
+  filter(str_detect(lsoa11cd, "^E")) %>%
+  select(-wd18nmw, -fid)
 
 left_join(lsoa, best_fit_lookup, by = "lsoa11cd") %>% 
-  st_write("best_fit_lsoa.geojson", driver = "GeoJSON")
+  st_write("best_fit_lsoa.geojson")
+
+# Electoral ward boundaries
+st_read("https://opendata.arcgis.com/datasets/a0b43fe01c474eb9a18b6c90f91664c2_3.geojson") %>% 
+  filter(str_detect(wd18cd, "^E")) %>%
+  left_join(select(best_fit_lookup, wd18cd, lad18cd, lad18nm), by = "wd18cd") %>% 
+  select(wd18cd, wd18nm, lad18cd, lad18nm, lon = long, lat) %>% 
+  st_write("wards.geojson")
 

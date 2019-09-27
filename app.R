@@ -1,12 +1,10 @@
 library(shiny) ; library(shinydashboard) ; library(shinyWidgets) ; library(tidyverse) ; library(sf) ; library(leaflet) ; library(htmltools) ; library(htmlwidgets) ; library(ggiraph) ; library(scales)
 
-df <- read.csv("data/imd.csv") %>% 
-  mutate(decile = factor(decile),
-         rank = as.integer(rank))
+imd <- read.csv("data/imd.csv") %>% 
+  mutate(decile = factor(decile, levels = c(1:10), ordered = TRUE))
 
 lsoa <- st_read("data/best_fit_lsoa.geojson")
-
-localities <- st_read("data/localities.geojson")
+wards <- st_read("data/wards.geojson")
 
 ui <- fluidPage(
   tags$head(includeCSS("styles.css")),
@@ -37,7 +35,10 @@ ui <- fluidPage(
                          choices = list("2019" = 2019, "2015" = 2015), 
                          selected = 2019,
                          inline = TRUE),
-            radioButtons(inputId = "domain", label = NULL,
+            selectInput("selection", tags$strong("Local authority"), 
+                        choices = sort(unique(lsoa$lad18nm)),
+                        selected = "Trafford"),
+            radioButtons(inputId = "domain", tags$strong("Deprivation domain"), 
                          choices = c("Index of Multiple Deprivation", "Income", "Employment", "Education, Skills and Training", 
                                      "Health Deprivation and Disability", "Crime", "Barriers to Housing and Services", "Living Environment",
                                      "Income Deprivation Affecting Children", "Income Deprivation Affecting Older People"),
@@ -51,11 +52,11 @@ ui <- fluidPage(
         box(width = '100%', 
             leafletOutput("map"),
             div(
-              style = "position: absolute; left: 3em; bottom: 3.5em;",
+              style = "position: absolute; left: 2.5em; bottom: 3.5em;",
               dropdown(
-                checkboxInput("localities", label = "Add localities", value = FALSE),
+                checkboxInput("wards", label = "Add wards", value = FALSE),
                 icon = icon("cog"),
-                size = "xs",
+                size = "s",
                 style = "jelly",
                 width = "180px",
                 up = TRUE
@@ -65,17 +66,29 @@ ui <- fluidPage(
                 '.fa {color: #212121;}
           .bttn-jelly.bttn-default{color:#f0f0f0;}
           .bttn-jelly:hover:before{opacity:1};'
-              )))
-    ))
-    )
+              ))),
+            tags$footer(
+              fluidRow(
+                "Developed in ",
+                a(href = "https://cran.r-project.org/", target = "_blank", "R"),
+                " by the ",
+                a(href = "https://www.trafforddatalab.io", target = "_blank", "Trafford Data Lab"),
+                " under the ",
+                a(href = "https://www.trafforddatalab.io/LICENSE.txt", target = "_blank", "MIT"),
+                " licence"
+              ),
+              style = "position:fixed; text-align:center; left: 0; bottom:0; width:100%; z-index:1000; height:30px; color: #7C7C7C; padding: 5px 20px; background-color: #E7E7E7"
+            )))
+  )
 )
-  
 
 server <- function(input, output){
   
   domain <- reactive({
-    lsoa <- left_join(lsoa, filter(df, index_domain == input$domain), by = "lsoa11cd") %>% 
-      filter(year == input$year)
+    lsoa <- left_join(filter(lsoa, lad18cd == unique(filter(lsoa, lad18nm == input$selection)$lad18cd)),
+                      filter(imd, index_domain == input$domain), 
+                      by = "lsoa11cd") %>% 
+      filter(year == input$year, lad18nm == input$selection) 
   })
   
   output$map <- renderLeaflet({
@@ -95,34 +108,33 @@ server <- function(input, output){
     
     pal <- colorFactor(c("#453B52", "#454F69", "#3F657E", "#317B8D", "#239296", "#26A898", "#43BD93", "#6AD189", "#98E37D", "#CAF270"), domain = 1:10, ordered = TRUE)
     
-    
-    if (input$localities) {
+    if (input$wards) {
   
-      
-    leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
+    leaflet() %>%
       setMaxBounds(bbox[1], bbox[2], bbox[3], bbox[4]) %>%
       addTiles(
         urlTemplate = "",
         attribution = '<a href="https://www.ons.gov.uk/methodology/geography/licences">Contains OS data © Crown copyright and database right (2019)</a>',
-        options = tileOptions(minZoom = 11, maxZoom = 17)
+        options = tileOptions(minZoom = 9, maxZoom = 14)
       ) %>%
         addMapPane("lsoa", zIndex = 410) %>% 
-        addMapPane("localities", zIndex = 450) %>% 
+        addMapPane("wards", zIndex = 450) %>% 
       addPolygons(data = domain(), 
                   fillColor = ~pal(decile), 
                   weight = 1,  opacity = 1, color = "#FFF", dashArray = "1", fillOpacity = 1,
                   highlight = highlightOptions(
-                    weight = 2, color = "#000", fillOpacity = 1, bringToFront = TRUE
+                    weight = 3, color = "#FFF", fillOpacity = 1, bringToFront = TRUE
                     ),
                   label = labels,
                   labelOptions = labelOptions(
                     style = list("font-weight" = "normal", padding = "3px 8px"),
                     textsize = "13px",
                     direction = 'top',
-                    offset=c(0,-5)),
+                    offset = c(0,-10)),
                   options = pathOptions(pane = "lsoa")) %>%
-      addPolylines(data = localities, stroke = TRUE, weight = 2, color = "#000", opacity = 1,
-                   options = pathOptions(pane = "localities")) %>% 
+      addPolylines(data = filter(wards, lad18cd == unique(filter(lsoa, lad18nm == input$selection)$lad18cd)),
+                   stroke = TRUE, weight = 2, color = "#000", opacity = 1,
+                   options = pathOptions(pane = "wards")) %>% 
       onRender(
         " function(el, t) {
         var myMap = this;
@@ -132,25 +144,25 @@ server <- function(input, output){
     }
     else {
       
-      leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
+      leaflet() %>%
         setMaxBounds(bbox[1], bbox[2], bbox[3], bbox[4]) %>%
         addTiles(
           urlTemplate = "",
           attribution = '<a href="https://www.ons.gov.uk/methodology/geography/licences">Contains OS data © Crown copyright and database right (2019)</a>',
-          options = tileOptions(minZoom = 11, maxZoom = 17)
+          options = tileOptions(minZoom = 9, maxZoom = 14)
         ) %>%
         addPolygons(data = domain(), 
                     fillColor = ~pal(decile), 
                     weight = 1,  opacity = 1, color = "#FFF", dashArray = "1", fillOpacity = 1,
                     highlight = highlightOptions(
-                      weight = 2, color = "#000", fillOpacity = 1, bringToFront = TRUE
+                      weight = 3, color = "#FFF", fillOpacity = 1, bringToFront = TRUE
                     ),
                     label = labels,
                     labelOptions = labelOptions(
                       style = list("font-weight" = "normal", padding = "3px 8px"),
                       textsize = "13px",
                       direction = 'top',
-                      offset=c(0,-5))) %>%
+                      offset = c(0,-10))) %>%
        onRender(
           " function(el, t) {
         var myMap = this;
@@ -165,16 +177,16 @@ server <- function(input, output){
     
     validate(need(nrow(domain()) != 0, message = FALSE))
     
-    palette <- c("#453B52", "#454F69", "#3F657E", "#317B8D", "#239296", "#26A898", "#43BD93", "#6AD189", "#98E37D", "#CAF270")
-    
     gg <- domain() %>%
       st_set_geometry(value = NULL) %>% 
-      count(decile) %>%
+      group_by(decile, .drop = FALSE) %>%
+      summarize(n = n()) %>%
       mutate(pct = n/sum(n),
              tooltip = paste0("<strong>", percent(pct), "</strong>", paste0(" (", n, " LSOAs)"))) %>% 
-      ggplot(aes(fct_rev(factor(decile)), n)) +
+      ggplot(aes(fct_rev(decile), n)) +
       geom_bar_interactive(aes(tooltip = tooltip, fill = factor(decile)), stat = "identity", position = "dodge") +
-      scale_fill_manual(values = palette) +
+      scale_fill_manual(values = c("#453B52", "#454F69", "#3F657E", "#317B8D", "#239296", 
+                                   "#26A898", "#43BD93", "#6AD189", "#98E37D", "#CAF270")) +
       scale_y_continuous(expand = c(0,0)) +
       coord_flip() +
       labs(x = NULL, y = NULL,

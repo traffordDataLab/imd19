@@ -1,5 +1,5 @@
 ## IMD19
-Interactive map showing the Indices of Deprivation 2019 (and 2015) for Trafford.
+Interactive map showing the [Indices of Deprivation 2019](https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019) (and 2015) for every local authority in England.
 
 <img src="screenshot.png" width="700">
 
@@ -9,4 +9,3 @@ The app can be viewed at <a href="https://trafforddatalab.shinyapps.io/imd19" ta
 shiny::runGitHub("trafforddatalab/imd19")
 ```
 
-**NB** The application is scalable to other local authorities. Just swap out the local authority name in the [pre-processing script](data/pre-processing.R).
