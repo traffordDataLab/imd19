@@ -27,8 +27,7 @@ ui <- fluidPage(
     windowTitle = "imd19"
   ),
   fluidRow( 
-    p(id = "intro", "This application visualises the English Indices of Deprivation 2019 for Lower-layer Super Output Areas (LSOA) within Trafford. Each LSOA contains approximately 1,500 residents or 650 households. 
-      Each LSOA is ranked from 1 (most deprived) to 32,844 (least deprived) and assigned to a decile ranging from 1 (most deprived 10%) to 10 (least deprived 10%).")
+    includeHTML("intro.html")
     ),
   fluidRow(
     br(),
@@ -52,7 +51,7 @@ ui <- fluidPage(
         box(width = '100%', 
             leafletOutput("map"),
             div(
-              style = "position: absolute; left: 1.5em; bottom: 3.5em;",
+              style = "position: absolute; left: 3em; bottom: 3.5em;",
               dropdown(
                 checkboxInput("localities", label = "Add localities", value = FALSE),
                 icon = icon("cog"),
@@ -88,7 +87,7 @@ server <- function(input, output){
     labels <- 
       paste0(
         "<strong>", domain()$lsoa11nm, "</strong>", paste0(" (", domain()$wd18nm, ")"), "<br />",
-        "IMD Score: ", domain()$score, "<br/>",
+       # "IMD Score: ", domain()$score, "<br/>",
         "IMD Rank: ", comma(domain()$rank), "<br/>",
         "IMD Decile: ", domain()$decile
       ) %>% 
@@ -179,14 +178,14 @@ server <- function(input, output){
       scale_y_continuous(expand = c(0,0)) +
       coord_flip() +
       labs(x = NULL, y = NULL,
-           title = "% of LSOAs in Trafford by IMD decile",
+           title = "% of LSOAs in each national deprivation decile",
            subtitle = "1 = most deprived, 10 = least deprived",
            caption = "Source: MHCLG") +
       theme_minimal(base_size = 12, base_family = "Open Sans") %+replace% 
       theme(
         panel.grid.major.y = element_blank(),
         panel.grid.minor = element_blank(),
-        plot.title = element_text(size = 16, face = "bold", hjust = 0),
+        plot.title = element_text(size = 14, face = "bold", hjust = 0),
         plot.subtitle = element_text(hjust = 0, margin = margin(9, 0, 9, 0)),
         plot.caption = element_text(size = 9, colour = "#757575", hjust = 1, margin = margin(t = 15)),
         axis.text.y = element_text(size = 12, face = "bold"),
