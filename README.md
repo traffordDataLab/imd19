@@ -1,5 +1,5 @@
 ## IMD19
-Interactive map showing the [Indices of Deprivation 2019](https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019) (and 2015) for every local authority in England.
+Application developed using the [R](https://cran.r-project.org) [Shiny](https://cran.r-project.org/web/packages/shiny/index.html) framework to enable interactive exploration of the [Indices of Deprivation 2019](https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019) (and 2015) for every local authority in England.
 <br /><br />
 
 <kbd>
