@@ -67,7 +67,7 @@ bind_rows(imd19, imd15) %>%
 
 # ------------------------------------------
 
-# Statistical geographies #
+# Statistical and administrative geographies #
 
 # Source: ONS Open Geography Portal 
 # Publisher URL: http://geoportal.statistics.gov.uk/
@@ -89,9 +89,9 @@ left_join(lsoa, best_fit_lookup, by = "lsoa11cd") %>%
   st_write("best_fit_lsoa.geojson")
 
 # Electoral ward boundaries
-st_read("https://opendata.arcgis.com/datasets/a0b43fe01c474eb9a18b6c90f91664c2_3.geojson") %>% 
-  filter(str_detect(wd18cd, "^E")) %>%
-  left_join(select(best_fit_lookup, wd18cd, lad18cd, lad18nm), by = "wd18cd") %>% 
-  select(wd18cd, wd18nm, lad18cd, lad18nm, lon = long, lat) %>% 
-  st_write("wards.geojson")
+# st_read("https://opendata.arcgis.com/datasets/a0b43fe01c474eb9a18b6c90f91664c2_3.geojson") %>% 
+#   filter(str_detect(wd18cd, "^E")) %>%
+#   left_join(select(best_fit_lookup, wd18cd, lad18cd, lad18nm), by = "wd18cd") %>% 
+#   select(wd18cd, wd18nm, lad18cd, lad18nm, lon = long, lat) %>% 
+#   st_write("wards.geojson")
 
