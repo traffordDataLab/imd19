@@ -2,6 +2,7 @@
 
 library(sf) ; library(tidyverse) ; library(janitor)
 
+
 # Source: Ministry of Housing, Communities and Local Government
 # Publisher URL: https://www.gov.uk/government/statistics/announcements/english-indices-of-deprivation-2019
 # Licence: Open Government Licence 3.0
@@ -62,6 +63,7 @@ imd15 <- read_csv("https://assets.publishing.service.gov.uk/government/uploads/s
   spread(measure, value) %>% 
   mutate(year = "2015")
 
+# Bind IoD2019 and IoD2015
 bind_rows(imd19, imd15) %>%
   write_csv("imd.csv")
 
@@ -83,9 +85,17 @@ lsoa <- st_read("https://opendata.arcgis.com/datasets/da831f80764346889837c72508
 best_fit_lookup <- read_csv("https://opendata.arcgis.com/datasets/8c05b84af48f4d25a2be35f1d984b883_0.csv") %>% 
   setNames(tolower(names(.)))  %>%
   filter(str_detect(lsoa11cd, "^E")) %>%
-  select(-wd18nmw, -fid)
+  select(lsoa11cd, lsoa11nm, wd18cd, wd18nm)
 
+# Create LSOA > LA lookup for 2019 boundaries using #IoD2019 data
+lookup <- read_csv("https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/833982/File_7_-_All_IoD2019_Scores__Ranks__Deciles_and_Population_Denominators.csv") %>% 
+  clean_names() %>% 
+  select(lsoa11cd = 1, lad19cd = 3, lad19nm = 4) %>% 
+  distinct(lsoa11cd, .keep_all = TRUE)
+
+# Join and write results
 left_join(lsoa, best_fit_lookup, by = "lsoa11cd") %>% 
+  left_join(lookup, by = "lsoa11cd") %>%
   st_write("best_fit_lsoa.geojson")
 
 # Electoral ward boundaries

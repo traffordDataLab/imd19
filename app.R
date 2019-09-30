@@ -35,7 +35,7 @@ ui <- fluidPage(
                          selected = 2019,
                          inline = TRUE),
             selectInput("la", tags$strong("Local authority"), 
-                        choices = sort(unique(lsoa$lad18nm)),
+                        choices = sort(unique(lsoa$lad19nm)),
                         selected = "Trafford"),
             radioButtons(inputId = "domain", tags$strong("Deprivation domain"), 
                          choices = c("Index of Multiple Deprivation", "Income", "Employment", "Education, Skills and Training", 
@@ -96,10 +96,10 @@ server <- function(input, output){
   
   # user selection
   domain <- reactive({
-    lsoa <- left_join(filter(lsoa, lad18cd == unique(filter(lsoa, lad18nm == input$la)$lad18cd)),
+    lsoa <- left_join(filter(lsoa, lad19cd == unique(filter(lsoa, lad19nm == input$la)$lad19cd)),
                       filter(imd, index_domain == input$domain), 
                       by = "lsoa11cd") %>% 
-      filter(year == input$year, lad18nm == input$la) 
+      filter(year == input$year, lad19nm == input$la) 
   })
   
   # bar chart
@@ -150,7 +150,7 @@ server <- function(input, output){
     
     ggplot(temp, aes(fct_rev(decile), n)) +
       geom_col(aes(fill = factor(decile))) +
-      geom_text(data = filter(temp, pct != 0), aes(label = percent(pct, accuracy = 1)), 
+      geom_text(data = filter(temp, pct != 0), aes(label = percent(pct, accuracy = 0.1)), 
                 size = 6, colour = "#212121", hjust = -0.2) +
       scale_fill_manual(values = c("#453B52", "#454F69", "#3F657E", "#317B8D", "#239296", 
                                    "#26A898", "#43BD93", "#6AD189", "#98E37D", "#CAF270")) +
