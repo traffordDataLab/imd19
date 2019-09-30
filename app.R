@@ -164,8 +164,8 @@ server <- function(input, output){
       theme(
         panel.grid.major= element_blank(),
         panel.grid.minor = element_blank(),
-        plot.title = element_text(size = 28, face = "bold", color = "#212121", hjust = 0),
-        plot.subtitle = element_text(size = 22, hjust = 0, margin = margin(9, 0, 9, 0)),
+        plot.title = element_text(size = 20, face = "bold", color = "#212121", hjust = 0),
+        plot.subtitle = element_text(size = 16, hjust = 0, margin = margin(9, 0, 9, 0)),
         plot.caption = element_text(size = 14, colour = "#757575", hjust = 1, margin = margin(t = 15)),
         axis.text.y = element_text(size = 18, face = "bold"),
         axis.text.x = element_blank(),
@@ -243,8 +243,8 @@ server <- function(input, output){
       coord_sf(crs = st_crs(4326), datum = NA) +
       theme_void() +
       theme(plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"),
-            plot.title = element_text(size = 26, face = "bold", hjust = 0.5),
-            plot.subtitle = element_text(size = 20, hjust = 0.5),
+            plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+            plot.subtitle = element_text(size = 14, hjust = 0.5),
             plot.caption = element_text(size = 10, colour = "#757575", hjust = 1, margin = margin(t = 25)),
             legend.position = "bottom") +
       guides(fill = guide_legend(label.position = "bottom", 
