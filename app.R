@@ -120,7 +120,7 @@ server <- function(input, output){
       scale_y_continuous(expand = c(0,0)) +
       coord_flip() +
       labs(x = NULL, y = NULL,
-           title = "% of LSOAs in each national deprivation decile",
+           title = "LSOAs in each national deprivation decile",
            subtitle = "1 = most deprived, 10 = least deprived",
            caption = "Source: MHCLG") +
       theme_minimal(base_size = 12, base_family = "Open Sans") %+replace% 
@@ -157,8 +157,8 @@ server <- function(input, output){
       scale_y_continuous(expand = expand_scale(mult = c(0, .15))) +
       coord_flip() +
       labs(x = NULL, y = NULL,
-           title = "% of LSOAs in each national deprivation decile",
-           subtitle = paste0(unique(domain()$index_domain), ", ", input$year),
+           title = "LSOAs in each national deprivation decile",
+           subtitle = paste0(input$la, ", ", unique(domain()$index_domain), ", ", input$year),
            caption = "Source: MHCLG") +
       theme_minimal(base_size = 12, base_family = "sans") %+replace% 
       theme(
